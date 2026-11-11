@@ -217,9 +217,16 @@ export async function removePlaceholder(
             ? realpathError.message
             : String(realpathError),
       });
-      throw new Error(
+      // Keep the fs error code: cleanup treats code === 'ENOENT' as "already removed" and drops
+      // the database record. Without it a placeholder whose file is gone errors on every sync.
+      const resolveError: NodeJS.ErrnoException = new Error(
         'Cannot resolve placeholder path - file may not exist or permissions denied'
       );
+      const sourceCode = (realpathError as NodeJS.ErrnoException)?.code;
+      if (sourceCode) {
+        resolveError.code = sourceCode;
+      }
+      throw resolveError;
     }
 
     // Find which configured library root contains this placeholder
