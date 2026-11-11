@@ -281,6 +281,9 @@ class ImdbAPI {
         error: error instanceof Error ? error.message : String(error),
       });
       // Don't throw - fall back to empty cache
+      // Count a failed refresh as an attempt. Otherwise needsRefresh() stays true and IMDb is
+      // fetched again for every overlay item while it is blocking the request.
+      this.top250LastRefresh[type === 'movie' ? 'movies' : 'tv'] = Date.now();
     }
   }
 
@@ -305,6 +308,12 @@ class ImdbAPI {
     imdbId: string,
     type: 'movie' | 'tv'
   ): Promise<ImdbTop250Result> {
+    // AGREGARR_IMDB_TOP250=off: never contact IMDb for the Top 250 badge
+    if (
+      String(process.env.AGREGARR_IMDB_TOP250 || '').toLowerCase() === 'off'
+    ) {
+      return { isTop250: false };
+    }
     try {
       // Refresh cache if needed
       if (this.needsRefresh(type)) {
