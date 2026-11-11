@@ -95,8 +95,9 @@ RUN apk add --no-cache \
   ttf-freefont
 
 # Install latest yt-dlp directly from GitHub releases (more up-to-date than apk package)
-RUN wget -q https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -O /usr/local/bin/yt-dlp && \
-  chmod a+rx /usr/local/bin/yt-dlp
+# homelab: pinned release + checksum (bump both together) instead of "latest"
+ADD --checksum=sha256:e51e69e89489f199530f13d32a4342da3ddb2cf34842f364603a066db05afbf3 --chmod=755 \
+    https://github.com/yt-dlp/yt-dlp/releases/download/2026.10.26/yt-dlp /usr/local/bin/yt-dlp
 
 COPY --from=build_image /app ./
 
